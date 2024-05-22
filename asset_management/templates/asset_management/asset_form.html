@@ -1,0 +1,16 @@
+<!-- asset_management/templates/asset_management/asset_form.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add/Edit Asset</title>
+</head>
+<body>
+    <h1>Add/Edit Asset</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+    <a href="{% url 'asset_list' %}">Back to List</a>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!-- asset_management/templates/asset_management/asset_detail.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ asset.name }}</title>
+</head>
+<body>
+    <h1>{{ asset.name }}</h1>
+    <p>Type: {{ asset.asset_type }}</p>
+    <p>Location: {{ asset.location }}</p>
+    <p>Purchase Date: {{ asset.purchase_date }}</p>
+    <p>Price: {{ asset.price }}</p>
+    <a href="{% url 'asset_edit' asset.id %}">Edit</a>
+    <a href="{% url 'asset_list' %}">Back to List</a>
+</body>
+</html>
