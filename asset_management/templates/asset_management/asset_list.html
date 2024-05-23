@@ -1,36 +1,161 @@
-<!-- asset_list.html -->
 {% extends "base.html" %}
 
 {% block title %}Assets{% endblock %}
 
 {% block content %}
-    <h1>Verwaltung</h1>
+    <h1>Asset Management</h1>
 
-    <h2>Vermögen hinzufügen</h2>
-    <a href="{% url 'asset_create' %}">Add Neue Vermögen</a>
+    <!-- 탭 내비게이션 바 -->
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'Verwaltung')">Verwaltung</button>
+        <button class="tablinks" onclick="openTab(event, 'Suche')">Suche</button>
+        <button class="tablinks" onclick="openTab(event, 'CSV')">CSV Export/Import</button>
+    </div>
 
-    <h2>Vermögen_Liste</h2>
-    <ul>
-        {% for asset in assets %}
-            <li>{{ asset.name }}</li>
-        {% endfor %}
-    </ul>
+    <!-- Verwaltung 탭 콘텐츠 -->
+    <div id="Verwaltung" class="tabcontent">
+        <h2>Vermögen hinzufügen</h2>
+        <a href="{% url 'asset_create' %}">Add Neue Vermögen</a>
 
-    <h2>Vermögen bearbeiten</h2>
-    <ul>
-        {% for asset in assets %}
-            <li>
-                {{ asset.name }} (<a href="{% url 'asset_edit' asset.id %}">Edit</a>)
-            </li>
-        {% endfor %}
-    </ul>
+        <h2>Vermögen Liste</h2>
+        <ul>
+            {% for asset in assets %}
+                <li>{{ asset.name }} ({{ asset.get_asset_type_display }}) - {{ asset.purchase_date }}</li>
+            {% endfor %}
+        </ul>
 
-    <h2>Vermögen löschen</h2>
-    <ul>
-        {% for asset in assets %}
-            <li>
-                {{ asset.name }} (<a href="{% url 'asset_delete' asset.id %}">Delete</a>)
-            </li>
-        {% endfor %}
-    </ul>
+        <h2>Vermögen bearbeiten</h2>
+        <ul>
+            {% for asset in assets %}
+                <li>
+                    {{ asset.name }} (<a href="{% url 'asset_edit' asset.id %}">Edit</a>)
+                </li>
+            {% endfor %}
+        </ul>
+
+        <h2>Vermögen löschen</h2>
+        <ul>
+            {% for asset in assets %}
+                <li>
+                    {{ asset.name }} (<a href="{% url 'asset_delete' asset.id %}">Delete</a>)
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Suche 탭 콘텐츠 -->
+    <div id="Suche" class="tabcontent" style="display:none;">
+        <h2>Suche</h2>
+        <form method="get">
+            <input type="text" name="q" placeholder="Search by name..." value="{{ query }}">
+            <select name="asset_type">
+                <option value="">All Types</option>
+                <option value="laptop" {% if asset_type == 'laptop' %}selected{% endif %}>Laptop</option>
+                <option value="desktop" {% if asset_type == 'desktop' %}selected{% endif %}>Desktop</option>
+                <option value="server" {% if asset_type == 'server' %}selected{% endif %}>Server</option>
+                <option value="network" {% if asset_type == 'network' %}selected{% endif %}>Network Equipment</option>
+            </select>
+            <input type="date" name="start_date" value="{{ start_date }}">
+            <input type="date" name="end_date" value="{{ end_date }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <!-- CSV Export/Import 탭 콘텐츠 -->
+    <div id="CSV" class="tabcontent" style="display:none;">
+        <h2>CSV Export/Import</h2>
+        <a href="{% url 'export_assets_csv' %}">Export to CSV</a>
+        <form method="post" action="{% url 'import_assets_csv' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="csv_file">
+            <button type="submit">Import from CSV</button>
+        </form>
+    </div>
+
+    <!-- JavaScript로 탭 전환 기능 구현 -->
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+
+            // 모든 탭 콘텐츠를 숨기기
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // 모든 탭 링크의 active 클래스를 제거
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // 클릭된 탭 콘텐츠를 보여주고, active 클래스 추가
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // 첫 번째 탭을 기본으로 열기
+        document.getElementsByClassName("tablinks")[0].click();
+    </script>
+
+    <!-- CSS 스타일 -->
+    <style>
+        /* 전체 배경색 설정 */
+        body {
+            background-color: #f0f8ff; /* 원하는 배경색으로 변경 */
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* 추가적인 스타일 설정 (선택 사항) */
+        .content {
+            padding: 20px;
+        }
+
+        /* 고정된 위치의 로그아웃 및 로그인 버튼을 스타일링 */
+        .auth-buttons {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+
+        /* 탭 스타일 */
+        .tab {
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
+            background-color: #003B46;
+        }
+
+        /* 탭 링크 스타일 */
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+            color: #F1FAEE; /* 기본 글씨 색깔 */
+        }
+
+        /* 탭 링크 hover 효과 */
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        /* 선택된 탭 링크 스타일 */
+        .tab button.active {
+            background-color: #88C3D0;
+            color: black; /* 선택된 탭의 글씨 색깔 */
+            font-weight: bold; /* 선택된 탭의 글씨 볼드체 */
+        }
+
+        /* 탭 콘텐츠 스타일 */
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border-top: none;
+        }
+    </style>
 {% endblock %}

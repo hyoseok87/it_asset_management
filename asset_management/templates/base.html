@@ -1,11 +1,30 @@
-<!-- base.html -->
 <!DOCTYPE html>
 <html>
 <head>
     <title>{% block title %}My Site{% endblock %}</title>
+    <style>
+        /* 전체 배경색 설정 */
+        body {
+            background-color: #F1FAEE; /* 원하는 배경색으로 변경 */
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* 추가적인 스타일 설정 (선택 사항) */
+        .content {
+            padding: 20px;
+        }
+
+        /* 고정된 위치의 로그아웃 및 로그인 버튼을 스타일링 */
+        .auth-buttons {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div style="position: fixed; top: 10px; right: 10px;">
+    <div class="auth-buttons">
         {% if user.is_authenticated %}
             <form method="post" action="{% url 'logout' %}" style="display: inline;">
                 {% csrf_token %}
@@ -17,7 +36,9 @@
         {% endif %}
     </div>
 
-    {% block content %}
-    {% endblock %}
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
 </body>
 </html>

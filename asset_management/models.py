@@ -37,5 +37,8 @@ class License(models.Model):
     def __str__(self):
         return self.software_name
 
-
+class AssetHistory(models.Model):
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    change_date = models.DateTimeField(auto_now_add=True)
+    change_description = models.TextField()
 
