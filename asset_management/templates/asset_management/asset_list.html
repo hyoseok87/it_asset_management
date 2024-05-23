@@ -1,20 +1,36 @@
-<!-- asset_management/templates/asset_management/asset_list.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Assets</title>
-</head>
-<body>
-    <h1>Assets</h1>
-    <a href="{% url 'asset_create' %}">Add New Asset</a>
+<!-- asset_list.html -->
+{% extends "base.html" %}
+
+{% block title %}Assets{% endblock %}
+
+{% block content %}
+    <h1>Verwaltung</h1>
+
+    <h2>Vermögen hinzufügen</h2>
+    <a href="{% url 'asset_create' %}">Add Neue Vermögen</a>
+
+    <h2>Vermögen_Liste</h2>
+    <ul>
+        {% for asset in assets %}
+            <li>{{ asset.name }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Vermögen bearbeiten</h2>
     <ul>
         {% for asset in assets %}
             <li>
-                <a href="{% url 'asset_detail' asset.id %}">{{ asset.name }}</a>
-                (<a href="{% url 'asset_edit' asset.id %}">Edit</a>,
-                <a href="{% url 'asset_delete' asset.id %}">Delete</a>)
+                {{ asset.name }} (<a href="{% url 'asset_edit' asset.id %}">Edit</a>)
             </li>
         {% endfor %}
     </ul>
-</body>
-</html>
+
+    <h2>Vermögen löschen</h2>
+    <ul>
+        {% for asset in assets %}
+            <li>
+                {{ asset.name }} (<a href="{% url 'asset_delete' asset.id %}">Delete</a>)
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
