@@ -1,6 +1,7 @@
 # asset_management/models.py
 from django.db import models
 
+
 class Asset(models.Model):
     name = models.CharField(max_length=100)
     ASSET_TYPE_CHOICES = [
@@ -8,9 +9,10 @@ class Asset(models.Model):
         ('desktop', 'Desktop'),
         ('server', 'Server'),
         ('network', 'Network Equipment'),
-        ('windows', 'License'),
+        ('license', 'License'),
         ('monitor', 'Monitor'),
-        ('drucker', 'Drucker')
+        ('drucker', 'Drucker'),
+        ('ipad', 'iPad')
     ]
     asset_type = models.CharField(max_length=50, choices=ASSET_TYPE_CHOICES)
     location = models.CharField(max_length=100)

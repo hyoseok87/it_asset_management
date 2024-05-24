@@ -10,6 +10,8 @@
         <button class="tablinks" onclick="openTab(event, 'Verwaltung')">Verwaltung</button>
         <button class="tablinks" onclick="openTab(event, 'Suche')">Suche</button>
         <button class="tablinks" onclick="openTab(event, 'CSV')">CSV Export/Import</button>
+        <button class="tablinks" onclick="confirmLogout()">Abmelden</button>
+
     </div>
 
     <!-- Verwaltung 탭 콘텐츠 -->
@@ -19,14 +21,14 @@
 
         <h2>Vermögen Liste</h2>
         <ul>
-            {% for asset in assets %}
+            {% for asset in all_assets %}
                 <li>{{ asset.name }} ({{ asset.get_asset_type_display }}) - {{ asset.purchase_date }}</li>
             {% endfor %}
         </ul>
 
         <h2>Vermögen bearbeiten</h2>
         <ul>
-            {% for asset in assets %}
+            {% for asset in all_assets %}
                 <li>
                     {{ asset.name }} (<a href="{% url 'asset_edit' asset.id %}">Edit</a>)
                 </li>
@@ -35,7 +37,7 @@
 
         <h2>Vermögen löschen</h2>
         <ul>
-            {% for asset in assets %}
+            {% for asset in all_assets %}
                 <li>
                     {{ asset.name }} (<a href="{% url 'asset_delete' asset.id %}">Delete</a>)
                 </li>
@@ -46,19 +48,51 @@
     <!-- Suche 탭 콘텐츠 -->
     <div id="Suche" class="tabcontent" style="display:none;">
         <h2>Suche</h2>
-        <form method="get">
-            <input type="text" name="q" placeholder="Search by name..." value="{{ query }}">
+        <form id="search-form" method="get" onsubmit="performSearch(event)">
+            <input type="text" name="q" placeholder="Search by name..." value="{{ query|default_if_none:'' }}">
             <select name="asset_type">
                 <option value="">All Types</option>
                 <option value="laptop" {% if asset_type == 'laptop' %}selected{% endif %}>Laptop</option>
                 <option value="desktop" {% if asset_type == 'desktop' %}selected{% endif %}>Desktop</option>
                 <option value="server" {% if asset_type == 'server' %}selected{% endif %}>Server</option>
                 <option value="network" {% if asset_type == 'network' %}selected{% endif %}>Network Equipment</option>
+                <option value="license" {% if asset_type == 'license' %}selected{% endif %}>License</option>
+                <option value="monitor" {% if asset_type == 'monitor' %}selected{% endif %}>Monitor</option>
+                <option value="drucker" {% if asset_type == 'drucker' %}selected{% endif %}>Drucker</option>
+                <option value="ipad" {% if asset_type == 'ipad' %}selected{% endif %}>iPad</option>
             </select>
-            <input type="date" name="start_date" value="{{ start_date }}">
-            <input type="date" name="end_date" value="{{ end_date }}">
-            <button type="submit">Search</button>
+            <input type="date" name="start_date" value="{{ start_date|default_if_none:'' }}">
+            <input type="date" name="end_date" value="{{ end_date|default_if_none:'' }}">
+            <button type="submit">Suche</button>
         </form>
+
+        <div id="search-results">
+            {% if filtered_assets is not None %}
+                {% if filtered_assets %}
+                    <h2>Suchergebnisse</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Asset Type</th>
+                                <th>Purchase Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asset in filtered_assets %}
+                                <tr>
+                                    <td>{{ asset.name }}</td>
+                                    <td>{{ asset.get_asset_type_display }}</td>
+                                    <td>{{ asset.purchase_date }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No results found.</p>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
 
     <!-- CSV Export/Import 탭 콘텐츠 -->
@@ -74,59 +108,119 @@
 
     <!-- JavaScript로 탭 전환 기능 구현 -->
     <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
 
-            // 모든 탭 콘텐츠를 숨기기
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-
-            // 모든 탭 링크의 active 클래스를 제거
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-
-            // 클릭된 탭 콘텐츠를 보여주고, active 클래스 추가
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
         }
 
-        // 첫 번째 탭을 기본으로 열기
-        document.getElementsByClassName("tablinks")[0].click();
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+
+        var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?active_tab=' + tabName;
+        window.history.pushState({path: newUrl}, '', newUrl);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var params = new URLSearchParams(window.location.search);
+        var activeTab = params.get('active_tab');
+        if (activeTab) {
+            document.getElementById(activeTab).style.display = "block";
+            var tablinks = document.getElementsByClassName("tablinks");
+            for (var i = 0; i < tablinks.length; i++) {
+                if (tablinks[i].textContent.trim() === activeTab) {
+                    tablinks[i].className += " active";
+                }
+            }
+        } else {
+            document.getElementsByClassName("tablinks")[0].click();
+        }
+    });
+
+    function performSearch(event) {
+        event.preventDefault();
+        var form = document.getElementById("search-form");
+        var formData = new FormData(form);
+
+        var searchParams = new URLSearchParams();
+        for (var pair of formData.entries()) {
+            searchParams.append(pair[0], pair[1]);
+        }
+
+        fetch(form.action + '?' + searchParams.toString(), {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+
+        .then(response => response.json())
+        .then(data => {
+            var resultsDiv = document.getElementById("search-results");
+            if (data.assets.length > 0) {
+                var resultsHTML = '<h2>Suchergebnisse</h2><table><thead><tr><th>Name</th><th>Asset Type</th><th>Purchase Date</th></tr></thead><tbody>';
+                data.assets.forEach(asset => {
+                    resultsHTML += `<tr><td>${asset.name}</td><td>${asset.asset_type}</td><td>${asset.purchase_date}</td></tr>`;
+                });
+                resultsHTML += '</tbody></table>';
+            } else {
+                resultsHTML = '<p>No results found.</p>';
+            }
+            resultsDiv.innerHTML = resultsHTML;
+        });
+    }
+
+    function confirmLogout() {
+        if (confirm("Möchten Sie abmelden?")) {
+
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "logout" %}';
+            var csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            form.appendChild(csrfToken);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    </script>
     </script>
 
     <!-- CSS 스타일 -->
     <style>
-        /* 전체 배경색 설정 */
+
         body {
-            background-color: #f0f8ff; /* 원하는 배경색으로 변경 */
+            background-color: #f0f8ff;
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Montserrat;
         }
 
-        /* 추가적인 스타일 설정 (선택 사항) */
         .content {
             padding: 20px;
         }
 
-        /* 고정된 위치의 로그아웃 및 로그인 버튼을 스타일링 */
         .auth-buttons {
             position: fixed;
             top: 10px;
             right: 10px;
         }
 
-        /* 탭 스타일 */
         .tab {
             overflow: hidden;
             border-bottom: 1px solid #ccc;
             background-color: #003B46;
+
         }
 
-        /* 탭 링크 스타일 */
         .tab button {
             background-color: inherit;
             float: left;
@@ -136,26 +230,46 @@
             padding: 14px 16px;
             transition: 0.3s;
             font-size: 17px;
-            color: #F1FAEE; /* 기본 글씨 색깔 */
+            color: #F1FAEE;
+
         }
 
-        /* 탭 링크 hover 효과 */
         .tab button:hover {
-            background-color: #ddd;
+            background-color: #88C3D0;
         }
 
-        /* 선택된 탭 링크 스타일 */
         .tab button.active {
             background-color: #88C3D0;
-            color: black; /* 선택된 탭의 글씨 색깔 */
-            font-weight: bold; /* 선택된 탭의 글씨 볼드체 */
+            color: black;
+            font-weight: bold;
+
         }
 
-        /* 탭 콘텐츠 스타일 */
         .tabcontent {
             display: none;
             padding: 6px 12px;
             border-top: none;
+
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 {% endblock %}
