@@ -3,7 +3,7 @@
 {% block title %}Assets{% endblock %}
 
 {% block content %}
-    <h1>Asset Management</h1>
+    <h1>Vermögen Verwaltung</h1>
 
     <!-- 탭 내비게이션 바 -->
     <div class="tab">
@@ -109,17 +109,11 @@
     <!-- JavaScript로 탭 전환 기능 구현 -->
     <script>
     function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
+        var tabcontent = document.getElementsByClassName("tabcontent");
+        Array.from(tabcontent).forEach(tab => tab.style.display = "none");
 
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-
-        tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
+        var tablinks = document.getElementsByClassName("tablinks");
+        Array.from(tablinks).forEach(tab => tab.className = tab.className.replace(" active", ""));
 
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
@@ -134,11 +128,11 @@
         if (activeTab) {
             document.getElementById(activeTab).style.display = "block";
             var tablinks = document.getElementsByClassName("tablinks");
-            for (var i = 0; i < tablinks.length; i++) {
-                if (tablinks[i].textContent.trim() === activeTab) {
-                    tablinks[i].className += " active";
+            Array.from(tablinks).forEach(tab => {
+                if (tab.textContent.trim() === activeTab) {
+                    tab.className += " active";
                 }
-            }
+            });
         } else {
             document.getElementsByClassName("tablinks")[0].click();
         }
@@ -160,7 +154,6 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-
         .then(response => response.json())
         .then(data => {
             var resultsDiv = document.getElementById("search-results");
@@ -174,12 +167,16 @@
                 resultsHTML = '<p>No results found.</p>';
             }
             resultsDiv.innerHTML = resultsHTML;
+        })
+        .catch(error => {
+            var resultsDiv = document.getElementById("search-results");
+            resultsDiv.innerHTML = '<p>Error occurred while fetching search results. Please try again.</p>';
+            console.error('Error:', error);
         });
     }
 
     function confirmLogout() {
         if (confirm("Möchten Sie abmelden?")) {
-
             var form = document.createElement('form');
             form.method = 'POST';
             form.action = '{% url "logout" %}';
@@ -193,7 +190,8 @@
         }
     }
     </script>
-    </script>
+
+
 
     <!-- CSS 스타일 -->
     <style>

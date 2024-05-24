@@ -23,7 +23,7 @@ def asset_list(request):
     if query:
         filters &= Q(name__icontains=query)
     if asset_type:
-        filters &= Q(asset_type=asset_type)
+        filters &= Q(asset_type__iexact=asset_type)
     if start_date:
         filters &= Q(purchase_date__gte=start_date)
     if end_date:
@@ -39,7 +39,6 @@ def asset_list(request):
     return render(request, 'asset_management/asset_list.html',
                   {'filtered_assets': filtered_assets, 'all_assets': all_assets, 'query': query, 'asset_type': asset_type,
                    'start_date': start_date, 'end_date': end_date, 'active_tab': active_tab})
-
 
 
 
@@ -75,12 +74,13 @@ def import_assets_csv(request):
                     asset_type=column[1],
                     location=column[2],
                     purchase_date=column[3],
-                    price=column[4]
+                    defaults={'price': column[4]}
                 )
             except Exception as e:
                 return render(request, 'asset_management/asset_list.html', {'error': f'Error on row: {column}, Error: {str(e)}'})
         return redirect('asset_list')
     return render(request, 'asset_management/asset_list.html')
+
 
 
 
